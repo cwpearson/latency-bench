@@ -34,6 +34,8 @@ auto BM_CoreCas = [](benchmark::State& state, int cpu0, int cpu1) {
   }
 
 
+  state.counters["cpu0"] = cpu0;
+  state.counters["cpu1"] = cpu1;
   state.counters["latency"] = benchmark::Counter(state.iterations(), benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
   numa::bind_thread_all_cpus();
 };

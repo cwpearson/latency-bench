@@ -6,17 +6,23 @@
 
 #include <benchmark/benchmark.h>
 
+#include <numa.h>
+
+#include "init.hpp"
+#include "numa.hpp"
+
 constexpr int SEED = 17;
 
-static void BM_MemLatency(benchmark::State& state) {
+auto BM_MemLatency = [](benchmark::State& state, int cpu, int node) {
+
+  numa::bind_thread_cpu(cpu);
 
   using data_type = int;
 
   const size_t sizeKiB = state.range(0);
   const size_t n = sizeKiB * 1024 / sizeof(data_type);
-
-
-  data_type * A = new data_type[n];
+  
+  data_type * A = numa::alloc_onnode<data_type>(n, node);
   for (size_t i = 0; i < n; ++i) {
     A[i] = i;
   }
@@ -32,9 +38,34 @@ static void BM_MemLatency(benchmark::State& state) {
     }
   }
 
+  state.counters["cpu"] = cpu;
+  state.counters["numa_node"] = node;
   state.counters["latency"] = benchmark::Counter(n * state.iterations(), benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
 
-  delete[] A;
+  numa::free<data_type>(A, n);
+
+  numa::bind_thread_all_cpus();
+};
+
+static void registerer() {
+
+
+  for (int cpu : numa::all_cpus()) {
+    for (int node : numa::all_nodes()) {
+
+      std::string name = std::string("BM_MemLatency")
+      + "/" + std::to_string(cpu)
+      + "/" + std::to_string(node);
+
+      benchmark::RegisterBenchmark(
+        name.c_str(),
+        BM_MemLatency,
+        cpu, node
+      )->UseRealTime()->RangeMultiplier(4)->Range(1, 1<<20);
+    }
+  }
+
 }
 
-BENCHMARK(BM_MemLatency)->UseRealTime()->RangeMultiplier(2)->Range(1, 1<<20);
+LB_ON_INIT(registerer, "BM_MemLatency");
+
