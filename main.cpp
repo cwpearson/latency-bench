@@ -1,3 +1,13 @@
 #include <benchmark/benchmark.h>
 
-BENCHMARK_MAIN();
+#include "init.hpp"
+
+int main(int argc, char** argv) {
+
+  benchmark::Initialize(&argc, argv);
+
+  init();
+
+  benchmark::RunSpecifiedBenchmarks();
+  benchmark::Shutdown();
+}

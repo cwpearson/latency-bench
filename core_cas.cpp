@@ -1,11 +1,22 @@
 #include <atomic>
+#include <iostream>
+#include <thread>
 
 #include <benchmark/benchmark.h>
 
+#include "init.hpp"
+#include "numa.hpp"
 
 std::atomic<bool> flag;
 
-static void BM_CoreCas(benchmark::State& state) {
+auto BM_CoreCas = [](benchmark::State& state, int cpu0, int cpu1) {
+
+  if (state.thread_index() == 0) {
+    numa::bind_thread_cpu(cpu0);
+  } else {
+    numa::bind_thread_cpu(cpu1);
+  }
+
 
   // reset state
   if (state.thread_index() == 0) {
@@ -22,8 +33,33 @@ static void BM_CoreCas(benchmark::State& state) {
     }
   }
 
+
   state.counters["latency"] = benchmark::Counter(state.iterations(), benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
+  numa::bind_thread_all_cpus();
+};
+
+
+static void registerer() {
+
+  std::vector<int> cpus = numa::all_cpus();
+
+  for (size_t i = 0; i < cpus.size(); ++i) {
+    for (size_t j = i; j < cpus.size(); ++j) {
+      int cpu0 = cpus[i];
+      int cpu1 = cpus[j];
+
+      std::string name = std::string("BM_CoreCas")
+      + "/" + std::to_string(cpu0)
+      + "/" + std::to_string(cpu1);
+
+      benchmark::RegisterBenchmark(
+        name.c_str(),
+        BM_CoreCas,
+        cpu0, cpu1
+      )->Threads(2)->UseRealTime();
+    }
+  }
+
 }
 
-
-BENCHMARK(BM_CoreCas)->Threads(2)->UseRealTime();
+LB_ON_INIT(registerer, "BM_CoreCas");

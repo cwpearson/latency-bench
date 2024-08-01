@@ -21,8 +21,6 @@ static void BM_MemLatency(benchmark::State& state) {
   for (size_t i = 0; i < n; ++i) {
     A[i] = i;
   }
-//   std::random_device rd;
-//   std::mt19937 g(rd());
   std::mt19937 g(SEED);
   std::shuffle(A, A+n, g);
 
@@ -40,4 +38,4 @@ static void BM_MemLatency(benchmark::State& state) {
   delete[] A;
 }
 
-BENCHMARK(BM_MemLatency)->UseRealTime()->RangeMultiplier(2)->Range(1, 1<<20);
+// BENCHMARK(BM_MemLatency)->UseRealTime()->RangeMultiplier(2)->Range(1, 1<<20);

@@ -2,6 +2,9 @@
 
 #include <benchmark/benchmark.h>
 
+#include "init.hpp"
+#include "numa.hpp"
+
 #define LINE_SIZE 128
 
 struct CachePadded{
@@ -13,7 +16,13 @@ struct CachePadded{
 CachePadded v1;
 CachePadded v2;
 
-static void BM_CoreReadWrite(benchmark::State& state) {
+auto BM_CoreReadWrite = [](benchmark::State& state, int cpu0, int cpu1) {
+
+  if (state.thread_index() == 0) {
+    numa::bind_thread_cpu(cpu0);
+  } else {
+    numa::bind_thread_cpu(cpu1);
+  }
 
   // t0 reads from v1 and writes to v2
   // t1 reads from v2 and writes from v1
@@ -48,6 +57,33 @@ static void BM_CoreReadWrite(benchmark::State& state) {
   }
 
   state.counters["latency"] = benchmark::Counter(state.iterations(), benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
+  
+  numa::bind_thread_all_cpus();
+};
+
+static void registerer() {
+
+  std::vector<int> cpus = numa::all_cpus();
+
+  // if we pin both threads to the same core, it just appears to be very slow
+  // because they can't execute at the same time
+  for (size_t i = 0; i < cpus.size(); ++i) {
+    for (size_t j = i+1; j < cpus.size(); ++j) {
+      int cpu0 = cpus[i];
+      int cpu1 = cpus[j];
+
+      std::string name = std::string("BM_CoreReadWrite")
+      + "/" + std::to_string(cpu0)
+      + "/" + std::to_string(cpu1);
+
+      benchmark::RegisterBenchmark(
+        name.c_str(),
+        BM_CoreReadWrite,
+        cpu0, cpu1
+      )->Threads(2)->UseRealTime();
+    }
+  }
+
 }
 
-BENCHMARK(BM_CoreReadWrite)->Threads(2)->UseRealTime();
+LB_ON_INIT(registerer, "BM_CoreReadWrite");
