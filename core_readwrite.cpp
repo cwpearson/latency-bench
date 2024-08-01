@@ -1,4 +1,5 @@
 #include <atomic>
+#include <iostream>
 
 #include <benchmark/benchmark.h>
 
@@ -37,20 +38,14 @@ auto BM_CoreReadWrite = [](benchmark::State& state, int cpu0, int cpu1) {
   // t0 has false, t1 has true
   bool b = state.thread_index() == 1;
 
-//   std::cerr << state.thread_index() << " " << &v1.b << " " << &v2.b << "\n";
-
   for (auto _ : state) {
 
     if (state.thread_index() == 0) {
-        // std::cerr << "0: wait for v1 to be " << b << "\n";
         while (b != v1.b.load(std::memory_order_acquire)) {}
-        // std::cerr << "0: " << !b << " -> v2\n";
         v2.b.store(!b, std::memory_order_release);
         b = !b;
     } else {
-        // std::cerr << "1: wait for v2 to be " << b << "\n";
         while (b != v2.b.load(std::memory_order_acquire)) {}
-        // std::cerr << "1: " << b << " -> v1\n";
         v1.b.store(b, std::memory_order_release);
         b = !b;
     }

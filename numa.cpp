@@ -1,5 +1,6 @@
 #include "numa.hpp"
 
+#include <iostream>
 #include <vector>
 
 #include <numa.h>
@@ -8,10 +9,9 @@
 namespace numa {
     std::vector<int> all_cpus() {
         std::vector<int> cpus;
-
         for (int i = 0; i < numa_num_possible_cpus(); ++i) {
             if (numa_bitmask_isbitset(numa_all_cpus_ptr, i)) {
-            cpus.push_back(i);
+		    cpus.push_back(i);
             }
         }
         return cpus;

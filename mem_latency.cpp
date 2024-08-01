@@ -9,7 +9,6 @@
 constexpr int SEED = 17;
 
 static void BM_MemLatency(benchmark::State& state) {
-  // Perform setup here
 
   using data_type = int;
 
@@ -38,4 +37,4 @@ static void BM_MemLatency(benchmark::State& state) {
   delete[] A;
 }
 
-// BENCHMARK(BM_MemLatency)->UseRealTime()->RangeMultiplier(2)->Range(1, 1<<20);
+BENCHMARK(BM_MemLatency)->UseRealTime()->RangeMultiplier(2)->Range(1, 1<<20);

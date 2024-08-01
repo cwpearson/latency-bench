@@ -12,10 +12,11 @@ void init() {
 
     numa_set_strict(1);
 
+    std::cerr << __FILE__ << ":" << __LINE__ << " calling " << on_inits.size() << " benchmark registerers...\n";
     for (const auto &fn : on_inits) {
-        std::cerr << "calling init fn...\n";
         fn();
     }
+    std::cerr << __FILE__ << ":" << __LINE__ << " done\n";
 }
 
 void on_init(std::function<void()> fn, const char *name) {
