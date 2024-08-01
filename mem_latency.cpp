@@ -38,6 +38,7 @@ auto BM_MemLatency = [](benchmark::State& state, int cpu, int node) {
     }
   }
 
+  state.counters["region_size"] = sizeKiB * 1024;
   state.counters["cpu"] = cpu;
   state.counters["numa_node"] = node;
   state.counters["latency"] = benchmark::Counter(n * state.iterations(), benchmark::Counter::kIsRate | benchmark::Counter::kInvert);
@@ -61,7 +62,7 @@ static void registerer() {
         name.c_str(),
         BM_MemLatency,
         cpu, node
-      )->UseRealTime()->RangeMultiplier(4)->Range(1, 1<<20);
+      )->UseRealTime()->RangeMultiplier(2)->Range(1, 1<<22);
     }
   }
 
