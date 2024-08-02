@@ -46,6 +46,7 @@ add_custom_command(
   OUTPUT numactl_make_success
   WORKING_DIRECTORY ${numactl_BINARY_DIR}
   COMMAND make CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} install
+  COMMAND cp bin/numactl ${CMAKE_CURRENT_BINARY_DIR}/numactl
   COMMAND touch ${CMAKE_CURRENT_BINARY_DIR}/numactl_make_success
 )
 add_custom_target(numactl_make
