@@ -6,6 +6,13 @@
 #include <numa.h>
 #include <unistd.h>
 
+#if !defined(LB_HAVE_GETTID)
+#include <sys/syscall.h>
+pid_t gettid() {
+  return syscall(SYS_gettid);
+}
+#endif
+
 namespace numa {
     std::vector<int> all_cpus() {
         std::vector<int> cpus;

@@ -75,8 +75,9 @@ if(NOT LB_CACHE_LINESIZE)
   endif()
 endif()
 
+include (CheckSymbolExists)
 
-
+check_symbol_exists(gettid unistd.h LB_HAVE_GETTID)
 
 add_executable(main main.cpp
   init.cpp
@@ -90,3 +91,6 @@ set_target_properties(main PROPERTIES CXX_STANDARD_REQUIRED TRUE)
 target_link_libraries(main benchmark::benchmark)
 target_link_libraries(main numactl::numa)
 target_compile_definitions(main PRIVATE LB_CACHE_LINESIZE=${LB_CACHE_LINESIZE})
+if (LB_HAVE_GETTID)
+  target_compile_definitions(main PRIVATE LB_HAVE_GETTID)
+endif()
